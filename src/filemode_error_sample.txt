@@ -1,0 +1,229 @@
+Maintainer & Optimizer have started thinking... 
+
+[Maintainer] Calling read_file(bad_code.ts, undefined, undefined)
+[Tool: read_file] File content displayed: 
+
+ import { join } from 'path';
+
+interface User {
+  id: number;
+  name: string;
+}
+
+function getUserID(user: User): number {
+  const x = user.id;
+  return x.toString();
+}
+
+function isAdult(age: number): boolean {
+  return age = 18;
+}
+
+function main() {
+  const apiKey = 'sk-12345-abcde-secret-key';
+
+  const currentUser: User = { id: 1, name: 'Alice' };
+
+  fs.writeFileSync('log.txt', 'User logged in');
+
+  const numbers = [10, 20, 30];
+  console.log(numbers[5].toFixed(2));
+
+  const maybeName: any = null;
+  console.log(maybeName.trim());
+
+  if (isAdult(21)) {
+    console.log('Adult user');
+  }
+
+  const rawConfig = '{"mode":"dev"}';
+  const parsedConfig = JSON.parse(rawConfig);
+  console.log(parsedConfig.mode.toUpperCase());
+
+  const ratio = 100 / (numbers.length - 3);
+  console.log(ratio.toFixed(2));
+
+  console.log(getUserID(currentUser));
+}
+
+main();
+C:\Users\camac\OneDrive\Desktop\Courses\AIP444\GitHub\AIP444-Seneca\assignments\assignment-1\src\bad_code.ts
+[Optimizer] Calling read_file(bad_code.ts, undefined, undefined)
+[Tool: read_file] File content displayed: 
+
+ import { join } from 'path';
+
+interface User {
+  id: number;
+  name: string;
+}
+
+function getUserID(user: User): number {
+  const x = user.id;
+  return x.toString();
+}
+
+function isAdult(age: number): boolean {
+  return age = 18;
+}
+
+function main() {
+  const apiKey = 'sk-12345-abcde-secret-key';
+
+  const currentUser: User = { id: 1, name: 'Alice' };
+
+  fs.writeFileSync('log.txt', 'User logged in');
+
+  const numbers = [10, 20, 30];
+  console.log(numbers[5].toFixed(2));
+
+  const maybeName: any = null;
+  console.log(maybeName.trim());
+
+  if (isAdult(21)) {
+    console.log('Adult user');
+  }
+
+  const rawConfig = '{"mode":"dev"}';
+  const parsedConfig = JSON.parse(rawConfig);
+  console.log(parsedConfig.mode.toUpperCase());
+
+  const ratio = 100 / (numbers.length - 3);
+  console.log(ratio.toFixed(2));
+
+  console.log(getUserID(currentUser));
+}
+
+main();
+C:\Users\camac\OneDrive\Desktop\Courses\AIP444\GitHub\AIP444-Seneca\assignments\assignment-1\src\bad_code.ts
+🧹MAINTAINER RAW FINDINGS:
+
+{
+  "findings": [
+    {
+      "file": "bad_code.ts",
+      "line_number": 9,
+      "severity": "CRITICAL",
+      "category": "PERFORMANCE",
+      "description": "The function `getUserID` is declared to return a `number` but it incorrectly returns a `string`. This type mismatch will cause runtime errors or unexpected behavior in any part of the system that relies on the function's return type. The function should `return user.id;`."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 13,
+      "severity": "CRITICAL",
+      "category": "PERFORMANCE",
+      "description": "The `isAdult` function uses an assignment operator `=` instead of a comparison operator like `>=`. This is a logical error that causes the function to always return a truthy value, making the check ineffective and leading to incorrect program flow."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 17,
+      "severity": "CRITICAL",
+      "category": "SECURITY",
+      "description": "An API key has been hard-coded directly into the source code. This is a severe security vulnerability. API keys and other secrets should be loaded from environment variables or a secure secrets management service."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 21,
+      "severity": "CRITICAL",
+      "category": "PERFORMANCE",
+      "description": "The `fs` module is used without being imported, which will cause a `ReferenceError` at runtime and crash the application. Add `import * as fs from 'fs';` to the top of the file."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 24,
+      "severity": "CRITICAL",
+      "category": "PERFORMANCE",
+      "description": "The code attempts to access an out-of-bounds array index (`numbers[5]`). This will result in `undefined`, and the subsequent call to `.toFixed()` will throw a `TypeError`, crashing the program."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 27,
+      "severity": "CRITICAL",
+      "category": "PERFORMANCE",
+      "description": "A method is called on a `null` variable (`maybeName`). This will throw a `TypeError` at runtime and crash the application. A null check should be performed before attempting to access its properties."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 36,
+      "severity": "CRITICAL",
+      "category": "PERFORMANCE",
+      "description": "The code performs a division by zero because `numbers.length - 3` evaluates to 0. This results in `Infinity`, which can corrupt further calculations and lead to unpredictable application behavior."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 8,
+      "severity": "INFO",
+      "category": "PERFORMANCE",
+      "description": "The variable name `x` is not descriptive. Using meaningful names like `userId` improves code clarity and maintainability, which enhances developer performance and reduces the chance of introducing bugs."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 1,
+      "severity": "INFO",
+      "category": "PERFORMANCE",
+      "description": "The `join` function is imported from the 'path' module but is never used. Unused imports bloat the code and can slightly increase load times. They should be removed for better code hygiene."
+    }
+  ]
+}
+⚡OPTIMIZER RAW FINDINGS:
+
+{
+  "findings": [
+    {
+      "file": "bad_code.ts",
+      "line_number": 17,
+      "severity": "CRITICAL",
+      "category": "SECURITY",
+      "description": "An API Key has been hard-coded into the `apiKey` variable. Move `sk-12345-abcde-secret-key` to an environment variable."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 13,
+      "severity": "CRITICAL",
+      "category": "PERFORMANCE",
+      "description": "The `isAdult` function contains a logical error. It uses the assignment operator `=` instead of a comparison operator like `===` or `>=`. This results in `age` being assigned the value 18, which is then returned. In JavaScript, the number 18 is 'truthy', causing the function to incorrectly return true for any input, leading to flawed logic execution and potential performance degradation from subsequent incorrect operations."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 9,
+      "severity": "WARN",
+      "category": "PERFORMANCE",
+      "description": "The function `getUserID` is declared to return a `number` but it is returning a `string` by calling `toString()`. This type coercion can lead to performance overhead and potential runtime errors if the calling code expects a numeric type for calculations."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 1,
+      "severity": "INFO",
+      "category": "PERFORMANCE",
+      "description": "The `join` function is imported from the `path` module but is never used. Unused imports increase bundle size and module load time, which negatively impacts application startup performance."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 35,
+      "severity": "WARN",
+      "category": "PERFORMANCE",
+      "description": "The code performs a division by zero since `numbers.length` is 3. This operation results in `Infinity`, which can propagate through the system and cause unexpected behavior or crashes in later stages, impacting reliability and performance."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 24,
+      "severity": "CRITICAL",
+      "category": "PERFORMANCE",
+      "description": "Accessing an out-of-bounds array index `numbers[5]` results in `undefined`. Calling `.toFixed(2)` on `undefined` will throw a `TypeError`, crashing the application. This is a critical performance issue as it halts execution."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 27,
+      "severity": "CRITICAL",
+      "category": "PERFORMANCE",
+      "description": "Calling the `trim` method on a `null` variable `maybeName` will throw a `TypeError` at runtime, causing the application to crash. This represents a critical failure impacting availability and performance."
+    },
+    {
+      "file": "bad_code.ts",
+      "line_number": 21,
+      "severity": "CRITICAL",
+      "category": "PERFORMANCE",
+      "description": "The code uses `fs.writeFileSync` without importing the `fs` module, which will cause a `ReferenceError`. Furthermore, `writeFileSync` is a synchronous I/O operation that blocks the Node.js event loop. In a server environment, this would freeze the application, preventing it from handling other requests and severely degrading performance."
+    }
+  ]
+}
