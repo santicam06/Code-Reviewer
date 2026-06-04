@@ -1,0 +1,11 @@
+
+# Utilities
+./node_modules
+
+
+# Test files
+./src/bad_code_sample.ts
+
+
+# Agents
+AGENTS.md
