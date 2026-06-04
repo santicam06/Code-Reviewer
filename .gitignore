@@ -4,8 +4,8 @@
 
 
 # Test files
-./src/bad_code_sample.ts
-
+src/bad_code_sample.ts
 
 # Agents
 AGENTS.md
+
