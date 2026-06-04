@@ -1,7 +1,7 @@
+import 'dotenv/config';
 import OpenAI from 'openai';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
 import { read_file, grep_codebase, get_file_history } from './tools.ts';
@@ -10,9 +10,8 @@ import { zodResponseFormat } from 'openai/helpers/zod.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
-const REPORT_DIR = path.resolve(__dirname, '../../report');
+const REPORT_DIR = path.resolve(__dirname, '../report');
 
 function ensureReportDir(): void {
   if (!fs.existsSync(REPORT_DIR)) {

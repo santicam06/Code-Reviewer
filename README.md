@@ -49,6 +49,11 @@ Before running the application, follow these steps:
    - `./src/`: Main source code (review.ts, schemas.ts, tools.ts)
    - `./src/system_prompts/`: Agent instructions (INSTRUCTIONS1-3.md)
    - `./node_modules/`: Installed npm dependencies
+   - `./report/`: Generated review reports (created automatically)
+
+### 📄 Report Output
+- **File mode**: `report/report_[FILENAME].md`
+- **Git mode**: `report/report_staged_#[N].md` (incrementing number)
 
 ### 🚨 Troubleshooting
 - **Missing API Key**: Ensure `OPENROUTER_API_KEY` is correctly set in your `.env` file at the repository root.
@@ -65,6 +70,7 @@ Review a single file:
 npx tsx src/review.ts --file path/to/your/file.ts [--verbose]
 ```
 
+
 ### Git Mode
 Review staged changes:
 ```bash
@@ -74,21 +80,4 @@ npx tsx src/review.ts --gitmode [--verbose]
 ### Typecheck Only
 ```bash
 npx tsc --noEmit
-```
-
-## 📁 Project Structure
-```
-Code-Reviewer/
-├── src/
-│   ├── review.ts           # Main entry point
-│   ├── schemas.ts          # Zod schemas & tool definitions
-│   ├── tools.ts            # Tool implementations
-│   └── system_prompts/
-│       ├── INSTRUCTIONS1.md # Maintainer prompt
-│       ├── INSTRUCTIONS2.md # Optimizer prompt
-│       └── INSTRUCTIONS3.md # Judge prompt
-├── .env.example            # Environment template
-├── package.json
-├── tsconfig.json
-└── AGENTS.md               # Agent instructions
 ```
