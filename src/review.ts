@@ -12,6 +12,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
+const REPORT_DIR = path.resolve(__dirname, '../../report');
+
+function ensureReportDir(): void {
+  if (!fs.existsSync(REPORT_DIR)) {
+    fs.mkdirSync(REPORT_DIR, { recursive: true });
+  }
+}
+
+function getNextGitReportNumber(): number {
+  ensureReportDir();
+  const files = fs.readdirSync(REPORT_DIR);
+  const stagedReports = files.filter(f => f.match(/^report_staged_#(\d+)\.md$/));
+  const numbers = stagedReports.map(f => parseInt(f.match(/^report_staged_#(\d+)\.md$/)?.[1] || '0', 10));
+  return numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
+}
+
+function sanitizeFileName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9._-]/g, '_');
+}
 
 const openai = new OpenAI({
   // Override the baseURL so that we use OpenRouter's API vs. OpenAI
@@ -19,52 +38,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
 });
 
-// FUNCTION TEST FOR GITMODE: INTENTIONALLY BAD 
-function generateHaikuTopic(seed: string): string {
-  const topics = ['moonlight', 'autumn rain', 'quiet forest', 'old library', 'morning fog'];
-  let hash = 0;
-
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  }
-
-  return topics[hash % topics.length];
-}
-
-// FUNCTION TEST FOR GITMODE: INTENTIONALLY BAD 
-function superUnsafeProcess(input: any, users: any[]): number {
-  // 1) hardcoded secret
-  const apiKey = "sk-live-VERY-SECRET-KEY";
-
-  // 2) assignment in condition (logic bug)
-  if (input.isAdmin = true) {
-    console.log("Admin granted");
-  }
-
-  // 3) possible runtime crash: JSON.parse on non-string / invalid JSON
-  const data = JSON.parse(input.payload);
-
-  // 4) wrong type assumption, can throw if name is undefined/null
-  const normalized = data.name.trim().toLowerCase();
-
-  // 5) mutation + out-of-bounds write
-  users[999999] = { hacked: true };
-
-  // 6) divide by zero risk
-  const ratio = 100 / (users.length - users.length);
-
-  // 7) wrong return type usage (string assigned then returned as number)
-  let result: number = "42" as any;
-
-  // 8) accidental infinite loop
-  let i = 0;
-  while (i < 10) {
-    i -= 1;
-  }
-
-  // 9) unreachable in practice because of infinite loop above
-  return result + ratio + normalized;
-}
 
 async function callLLM(messages: any[], tools: any[] = [], responseFormat: any = undefined, maxRetries = 3, delay = 1000): Promise<any> {
 
@@ -360,6 +333,14 @@ async function main() {
                 console.log(`\n\n⚖️ Judge's pronouncement is...\n\n`);
                 await new Promise((resolve) => setTimeout(resolve, 5000));
                 console.log(judgeVerdict);
+
+                // Write report to file
+                ensureReportDir();
+                const baseName = path.basename(fileName, path.extname(fileName));
+                const reportFileName = `report_${sanitizeFileName(baseName)}.md`;
+                const reportPath = path.join(REPORT_DIR, reportFileName);
+                fs.writeFileSync(reportPath, judgeVerdict || '', 'utf-8');
+                console.log(`\n📄 Report saved to: ${reportPath}`);
                 process.exit(0);
 
               }
@@ -369,7 +350,7 @@ async function main() {
               console.error(`😕 NO VALID RESPONSE FROM THE LLM(s)`)
               process.exit(1);
             }
- 
+  
         }
 
         else if (isGitMode) {
@@ -420,6 +401,14 @@ async function main() {
                 console.log(`\n\n⚖️ Judge's pronouncement is...\n\n`);
                 await new Promise((resolve) => setTimeout(resolve, 5000));
                 console.log(judgeVerdict);
+
+                // Write report to file
+                ensureReportDir();
+                const reportNumber = getNextGitReportNumber();
+                const reportFileName = `report_staged_#${reportNumber}.md`;
+                const reportPath = path.join(REPORT_DIR, reportFileName);
+                fs.writeFileSync(reportPath, judgeVerdict || '', 'utf-8');
+                console.log(`\n📄 Report saved to: ${reportPath}`);
                 process.exit(0);
 
               }
