@@ -330,7 +330,7 @@ async function main() {
             }
 
             if (!fileName || !fs.existsSync(fileName)) {
-                console.log('🔴 MAIN(): NO FILE FOUND TO REVIEW IN FILE MODE. Check file name.');
+                console.log('🔴 No file found to review in file mode. Check file name.');
                 process.exit(0);
             }
 
@@ -406,7 +406,7 @@ async function main() {
           }
 
           if (!output.stdout || output.stdout.trim().length === 0) {
-              console.log('No staged changes to review.');
+              console.log('🔴 No staged changes to review.');
               process.exit(0);
           }
 

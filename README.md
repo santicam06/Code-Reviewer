@@ -79,6 +79,9 @@ Review a single file:
 npx tsx src/review.ts --file "path/to/your/file.ts" [--verbose]
 ```
 
+> [!NOTE]
+> Verbose flag (`--verbose`) generates a `debug.txt` file with log traces (overridden per run), use it for engineering purposes only.
+
 ### Git Mode
 
 Review staged changes in a local cloned repo:
@@ -91,8 +94,7 @@ Review staged changes in current repo:
 npx tsx src/review.ts --gitmode [--verbose]
 ```
 
-> [!NOTE]
-> Verbose flag (`--verbose`) generates a `debug.txt` file with log traces (overridden per run), use it for engineering purposes only.
+
 
 
 
