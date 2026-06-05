@@ -58,11 +58,12 @@ export function read_file(file_path: string, start_line: number = 0, end_line: n
 }
 
 
-export function grep_codebase(search_pattern: string): string {
+export function grep_codebase(search_pattern: string, search_directory?: string): string {
     try {
+        const searchRoot = search_directory ? path.resolve(search_directory) : projectRoot;
 
-        // Run ripgrep from the root directory
-        const output = spawnSync('rg', [search_pattern, projectRoot], { encoding: 'utf-8' });
+        // Run ripgrep from the specified directory
+        const output = spawnSync('rg', [search_pattern, searchRoot], { encoding: 'utf-8' });
 
         // catch block handles this
         if (output.error) {
@@ -88,7 +89,10 @@ export function get_file_history(file_path: string) {
 
         if (fs.existsSync(resolvedPath) && fs.statSync(resolvedPath).isFile()) {
             const args = ['log', '-p', '-n', '3', resolvedPath];
-            const output = spawnSync('git', args, { encoding:   'utf-8' });
+            const output = spawnSync('git', args, { 
+                encoding: 'utf-8',
+                cwd: path.dirname(resolvedPath)
+            });
 
             // catch block handles this
             if (output.error || output.stdout.trim().length === 0) {

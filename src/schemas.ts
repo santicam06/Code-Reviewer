@@ -65,14 +65,18 @@ export const grep_codebase_tool =
     type: 'function' as const,
     function: {
       name: 'grep_codebase',
-      description: 'Runs the ripgrep command and searches within the entire codebase (starting from the root directory of the appplication) for the pattern parameter provided, it can be used to investigate function definitions, seek caller\'s details, find test code, or any other research required. Returns content found up to 10000 characters (truncated if exceeds this number), if content not found returns validation message', 
+      description: 'Runs the ripgrep command to search for a pattern. By default searches the current project root, but can search any directory via search_directory parameter. Useful to investigate function definitions, seek caller\'s details, find test code, or any other research required. Returns content found up to 10000 characters (truncated if exceeds this number), if content not found returns validation message', 
 
       parameters: {
         type: 'object',
         properties: {
           search_pattern: {
             type: 'string',
-            description: 'The pattern to lookup in the codebase',
+            description: 'The pattern to lookup',
+          },
+          search_directory: {
+            type: 'string',
+            description: 'Optional directory to search in (absolute path). Defaults to project root.',
           },
         },
         required: ['search_pattern'],

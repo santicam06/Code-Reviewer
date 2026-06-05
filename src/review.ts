@@ -93,7 +93,7 @@ async function callLLM(messages: any[], tools: any[] = [], responseFormat: any =
 
 
 // This function collects the whole conversation between user tools and LLM
-// A reviewer can be maintainer or optimizer
+// A reviewer can be the maintainer or optimizer
 async function conversationLLM(reviewer: OpenAI.Chat.Completions.ChatCompletion | undefined, verboseFlag: boolean, roleReviewer: string): Promise<any> {
 
   // To be joined with reviewer's inputs pack in main
@@ -114,26 +114,26 @@ async function conversationLLM(reviewer: OpenAI.Chat.Completions.ChatCompletion 
               const args = JSON.parse(toolCall.function.arguments);
               let toolContent = ''; 
 
-              console.log('-TOOLCALL ID: ' + toolCall.id);
-              console.log('   FUNCTION CALLED: ' + JSON.stringify(toolCall.function.name) + '\n'); 
+              console.error(' -TOOLCALL ID: ' + toolCall.id);
+              console.error('   FUNCTION CALLED: ' + JSON.stringify(toolCall.function.name) + '\n'); 
 
               // Verify which function is requested by LLM
               if (functionName === 'read_file') {
                 if (verboseFlag) {
                   console.error(
-                    `[${roleReviewer}] Calling ${functionName}(${args.file_path}, ${args.start_line}, ${args.end_line})`
+                    ` [${roleReviewer}] Calling ${functionName}(${args.file_path}, ${args.start_line}, ${args.end_line})`
                   );
                 }
                 toolContent = read_file(args.file_path, args.start_line, args.end_line);
 
 
-                if (verboseFlag) { console.error(`[Tool: read_file] File content displayed: \n\n ${toolContent}`); }
+                if (verboseFlag) { console.error(`    [Tool: read_file] File content displayed: \n\n ${toolContent}`); }
               } 
 
               else if (functionName === 'grep_codebase') {
                 if (verboseFlag) {
                   console.error(
-                    `[${roleReviewer}] Calling ${functionName}(${args.search_pattern})`
+                    ` [${roleReviewer}] Calling ${functionName}(${args.search_pattern})`
                   );
                 }
                 toolContent = grep_codebase(args.search_pattern);
@@ -148,7 +148,7 @@ async function conversationLLM(reviewer: OpenAI.Chat.Completions.ChatCompletion 
                     : trimmedOutput.split(/\r?\n/).filter((line) => line.trim().length > 0).length;
                                  
                   console.error(
-                    `[Tool: grep_codebase] Found ${patternOccurrences} matches for "${args.search_pattern}":\n\n${toolContent}`
+                    `   [Tool: grep_codebase] Found ${patternOccurrences} matches for "${args.search_pattern}":\n\n${toolContent}`
                   );
                 }
               }
@@ -156,12 +156,12 @@ async function conversationLLM(reviewer: OpenAI.Chat.Completions.ChatCompletion 
               else if (functionName === 'get_file_history') {
                 if (verboseFlag) {
                   console.error(
-                    `[${roleReviewer}] Calling ${functionName}(${args.file_path})`
+                    ` [${roleReviewer}] Calling ${functionName}(${args.file_path})`
                   );
                 }
                 toolContent = get_file_history(args.file_path);
 
-                if (verboseFlag) { console.error(`[Tool: get_file_history] last 3 commits displayed: \n\n ${toolContent}`); }
+                if (verboseFlag) { console.error(`    [Tool: get_file_history] last 3 commits displayed: \n\n ${toolContent}`); }
               } 
 
               const toolMessage = {
@@ -180,7 +180,9 @@ async function conversationLLM(reviewer: OpenAI.Chat.Completions.ChatCompletion 
   return reviewerInputPack;
 }
 
-function parseToJSON(label: string, contentLLM: string, isVerbose: boolean): any[] {
+
+// A reviewer can be the maintainer or optimizer
+function parseToJSON(reviewer: string, contentLLM: string, isVerbose: boolean): any[] {
   
   try {
     // Remove markdown fences if model returns ```json ... ```
@@ -196,15 +198,15 @@ function parseToJSON(label: string, contentLLM: string, isVerbose: boolean): any
     const arrayJSONS = validated.findings;
 
     if (isVerbose) {
-      console.error(`${label} RAW FINDINGS:\n`);
-      console.error(JSON.stringify(validated, null, 2));
+      console.error(`\n ${reviewer} RAW FINDINGS:\n`);
+      console.error(`   ${JSON.stringify(validated, null, 2)}`);
     }
 
     return arrayJSONS;
   } 
   catch {
-    console.error(`${label} RAW FINDINGS (non-JSON parsed):\n`);
-    console.error(contentLLM);
+    console.error(`\n ${reviewer} RAW FINDINGS (non-JSON parsed):\n`);
+    console.error(`   ${contentLLM}`);
     return [];
   }
 }
@@ -216,7 +218,7 @@ async function toolCallLoop(inputPackMaintainer: any[], inputPackOptimizer: any[
   let started = false;
 
     while (i <= 5) {
-        console.log(`📲 LLM CALL #${i}`);
+        console.error(`\n📲 LLM CALL #${i}\n`);
 
         // Call MAINTAINER & OPTIMIZER with user input + available tools
         const [maintainer, optimizer] = await Promise.all([
@@ -269,15 +271,29 @@ async function main() {
     const isFileMode = args.includes('--file');
     const isVerbose = args.includes('--verbose');
 
-    // Redirect stderr to debug.txt when verbose mode is enabled
+    // Parse repo path (optional, only for git mode): --gitmode [repoPath] [--verbose]
+    let repoPath: string | null = null;
+    if (isGitMode) {
+        const gitModeIdx = args.indexOf('--gitmode');
+        const nextArg = args[gitModeIdx + 1];
+        if (nextArg && !nextArg.startsWith('--')) {
+            repoPath = path.resolve(nextArg);
+            if (!fs.existsSync(repoPath) || !fs.existsSync(path.join(repoPath, '.git'))) {
+                console.error(`🔴 REPO NOT FOUND OR NOT A GIT REPO: ${repoPath}`);
+                process.exit(1);
+            }
+        }
+    }
+
+    // Redirect stderr to debug.txt when verbose mode is enabled (suppress terminal output)
     let debugStream: fs.WriteStream | null = null;
     if (isVerbose) {
         const debugPath = path.resolve(process.cwd(), 'debug.txt');
-        debugStream = fs.createWriteStream(debugPath, { flags: 'a' });
-        const originalStderrWrite = process.stderr.write.bind(process.stderr);
+        debugStream = fs.createWriteStream(debugPath, { flags: 'w' });
         process.stderr.write = (chunk: any, encoding?: any, callback?: any) => {
             debugStream?.write(chunk, encoding);
-            return originalStderrWrite(chunk, encoding, callback);
+            if (callback) callback();
+            return true;
         };
     }
 
@@ -319,7 +335,7 @@ async function main() {
             }
 
             // Proceed with file mode logic
-            console.log(`Reviewing file: ${fileName}`);
+            console.log(`Reviewing file: ${fileName}\nThanks for your patience 🙂. `);
 
             // Prepare user input (file content)
             inputPackMaintainer.push({ role: 'user', content: fileName })
@@ -348,23 +364,28 @@ async function main() {
               if (inputPackJudge) {
 
                 const judgeCompletion = await callLLM(inputPackJudge);
-                const judgeVerdict = judgeCompletion.choices[0]?.message.content;
+                const judgeVerdict = judgeCompletion.choices[0]?.message.content || '';
+
+                // Split at '---' delimiter: introduction before, body after
+                const verdictParts = judgeVerdict.split('---');
+                const verdictIntro = verdictParts[0]?.trim() || judgeVerdict;
 
                 console.log(`\n\n⚖️ Judge's pronouncement is...\n\n`);
                 await new Promise((resolve) => setTimeout(resolve, 5000));
-                console.log(judgeVerdict);
+                console.log(verdictIntro);
+                console.log('\n...');
 
-                // Write report to file
+
+                // Write full report to file
                 ensureReportDir();
                 const baseName = path.basename(fileName, path.extname(fileName));
                 const reportFileName = `report_${sanitizeFileName(baseName)}.md`;
                 const reportPath = path.join(REPORT_DIR, reportFileName);
-                fs.writeFileSync(reportPath, judgeVerdict || '', 'utf-8');
-                console.log(`\n📄 Report saved to: ${reportPath}`);
+                fs.writeFileSync(reportPath, judgeVerdict, 'utf-8');
+                console.log(`\n🔎📄 See the rest of the report at: ${reportPath}`);
                 process.exit(0);
 
               }
-
             }
             else {
               console.error(`😕 NO VALID RESPONSE FROM THE LLM(s)`)
@@ -375,69 +396,76 @@ async function main() {
 
         else if (isGitMode) {
 
-            const output = spawnSync('git', ['diff', '--staged'], { encoding: 'utf-8' });
+          // If no repo path provided by user, use this script's codebase as cwd
+          const gitCwd = repoPath || process.cwd();
 
-            if (output.error || output.status != 0) {
-              throw 'Error processing git diff';
+          const output = spawnSync('git', ['diff', '--staged'], { encoding: 'utf-8', cwd: gitCwd });
+
+          if (output.error || output.status != 0) {
+            throw 'Error processing git diff';
+          }
+
+          if (!output.stdout || output.stdout.trim().length === 0) {
+              console.log('No staged changes to review.');
+              process.exit(0);
+          }
+
+          // Proceed with git mode logic
+          console.log(`Reviewing staged changes in ${gitCwd}...\nThanks for your patience 🙂. `);
+
+          // Prepare user input (git diff content output)
+          inputPackMaintainer.push({ role: 'user', content: output.stdout })
+          inputPackOptimizer.push({ role: 'user', content: output.stdout })
+
+          // HANDLE LLM CONVERSATION WITH TOOL CALLS
+          await toolCallLoop(inputPackMaintainer, inputPackOptimizer, isVerbose);
+
+          // FINAL LLMs CALL, FUNCTION RETURNS FINAL OUTPUT
+          const { maintainerFinalMSG, optimizerFinalMSG } = await finalCallLLM(inputPackMaintainer, inputPackOptimizer);
+
+          if (maintainerFinalMSG && optimizerFinalMSG) {
+
+            // Collect output, set into arrays of JSON + Raw findings for verbose mode
+            const maintainerJSONArray = parseToJSON('🧹MAINTAINER', maintainerFinalMSG, isVerbose);
+            const optimizerJSONArray = parseToJSON('⚡OPTIMIZER', optimizerFinalMSG, isVerbose);
+
+            const arrayJSONPack = maintainerJSONArray.concat(optimizerJSONArray);
+
+            const inputPackJudge: any = [  { role: 'system', content: instructionsJudge },  
+                                           { role: 'user', content: `Here are the combined reviewer reports as JSON:\n\n${JSON.stringify(arrayJSONPack, null, 2)}` },
+            ];
+
+
+            // FINAL OUTPUT FROM JUDGE (LEAD DEVELOPER)
+            if (inputPackJudge) {
+
+              const judgeCompletion = await callLLM(inputPackJudge);
+              const judgeVerdict = judgeCompletion.choices[0]?.message.content || '';
+
+              // Split at '---' delimiter: introduction before, body after
+              const verdictParts = judgeVerdict.split('---');
+              const verdictIntro = verdictParts[0]?.trim() || judgeVerdict;
+
+              console.log(`\n\n⚖️ Judge's pronouncement is...\n\n`);
+              await new Promise((resolve) => setTimeout(resolve, 5000));
+              console.log(verdictIntro);
+              console.log('\n...');
+
+              // Write full report to file
+              ensureReportDir();
+              const reportNumber = getNextGitReportNumber();
+              const reportFileName = `report_staged_#${reportNumber}.md`;
+              const reportPath = path.join(REPORT_DIR, reportFileName);
+              fs.writeFileSync(reportPath, judgeVerdict, 'utf-8');
+              console.log(`\n🔎📄 See the rest of the report at: ${reportPath}`);
+              process.exit(0);
+
             }
-
-            if (!output.stdout || output.stdout.trim().length === 0) {
-                console.log('No staged changes to review.');
-                process.exit(0);
-            }
-
-            // Proceed with git mode logic
-            console.log('Reviewing staged changes...');
-
-            // Prepare user input (git diff content output)
-            inputPackMaintainer.push({ role: 'user', content: output.stdout })
-            inputPackOptimizer.push({ role: 'user', content: output.stdout })
-
-            // HANDLE LLM CONVERSATION WITH TOOL CALLS
-            await toolCallLoop(inputPackMaintainer, inputPackOptimizer, isVerbose);
-
-            // FINAL LLMs CALL, FUNCTION RETURNS FINAL OUTPUT
-            const { maintainerFinalMSG, optimizerFinalMSG } = await finalCallLLM(inputPackMaintainer, inputPackOptimizer);
-
-            if (maintainerFinalMSG && optimizerFinalMSG) {
-
-              // Collect output, set into arrays of JSON + Raw findings for verbose mode
-              const maintainerJSONArray = parseToJSON('🧹MAINTAINER', maintainerFinalMSG, isVerbose);
-              const optimizerJSONArray = parseToJSON('⚡OPTIMIZER', optimizerFinalMSG, isVerbose);
-
-              const arrayJSONPack = maintainerJSONArray.concat(optimizerJSONArray);
-
-              const inputPackJudge: any = [  { role: 'system', content: instructionsJudge },  
-                                             { role: 'user', content: `Here are the combined reviewer reports as JSON:\n\n${JSON.stringify(arrayJSONPack, null, 2)}` },
-              ];
-
-
-              // FINAL OUTPUT FROM JUDGE (LEAD DEVELOPER)
-              if (inputPackJudge) {
-
-                const judgeCompletion = await callLLM(inputPackJudge);
-                const judgeVerdict = judgeCompletion.choices[0]?.message.content;
-
-                console.log(`\n\n⚖️ Judge's pronouncement is...\n\n`);
-                await new Promise((resolve) => setTimeout(resolve, 5000));
-                console.log(judgeVerdict);
-
-                // Write report to file
-                ensureReportDir();
-                const reportNumber = getNextGitReportNumber();
-                const reportFileName = `report_staged_#${reportNumber}.md`;
-                const reportPath = path.join(REPORT_DIR, reportFileName);
-                fs.writeFileSync(reportPath, judgeVerdict || '', 'utf-8');
-                console.log(`\n📄 Report saved to: ${reportPath}`);
-                process.exit(0);
-
-              }
-
-            }
-            else {
-              console.error(`😕 NO VALID RESPONSE FROM THE LLM(s)`)
-              process.exit(1);
-            }
+          }
+          else {
+            console.error(`😕 NO VALID RESPONSE FROM THE LLM(s)`)
+            process.exit(1);
+          }
         }
         // No flag was entered in CLI
         else {
