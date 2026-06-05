@@ -62,7 +62,7 @@ Before running the application, follow these steps:
 ### 🚨 Troubleshooting
 - **Missing API Key**: Ensure `OPENROUTER_API_KEY` is correctly set in your `.env` file at the repository root.
 - **Dependency Issues**: If running in a new environment, ensure you have executed `npm install` (**Step 4**).
-- **ripgrep not found**: Install ripgrep (**Step 3**) - required for the `grep_codebase` tool.
+- **ripgrep not found**: Install ripgrep (**Step 3**) - required for the `grep_codebase` LLM tool.
 - **Git not found**: Required for `--gitmode` and `get_file_history` tool. Install Git if missing.
 - **TypeScript errors**: Run `npx tsc --noEmit` to typecheck.
 
