@@ -37,5 +37,7 @@ EXAMPLE OF A VALID REPORT:
     }
 ```
 
-FINAL REMINDER:
+## FINAL REMINDER FOR YOUR OUTPUT:
 All the collected information of EACH REPORT, MUST be synthesized in a Markdown format, this has to be always your response format as it needs to be human-readable. NEVER PROVIDE JSON FORMAT.  
+
+- Provide an introduction explaining your findings and what does the situation look like on the scripts analyzed, then separate the introduction by adding **in a new line** '---' to delimit from the rest of the report.

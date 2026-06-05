@@ -1,17 +1,25 @@
-import 'dotenv/config';
 import OpenAI from 'openai';
+import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
-import { read_file, grep_codebase, get_file_history } from './tools.ts';
+import { read_file, grep_codebase, get_file_history } from './tools.ts';     // Tools used by LLMs 
 import {read_file_tool, grep_codebase_tool, schemaLLM, file_history_tool } from './schemas.ts';     // Neither maintainer nor optimizer use file_history_tool
 import { zodResponseFormat } from 'openai/helpers/zod.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const REPORT_DIR = path.resolve(__dirname, '../report');
+for (let d = __dirname; d !== path.dirname(d); d = path.dirname(d)) {
+  if (fs.existsSync(path.join(d, '.env'))) { 
+    dotenv.config({ path: path.join(d, '.env') }); 
+    break; 
+  }
+}
+if (!process.env.OPENROUTER_API_KEY) dotenv.config();
+
+const REPORT_DIR = path.resolve(__dirname, '../reports');
 
 function ensureReportDir(): void {
   if (!fs.existsSync(REPORT_DIR)) {
@@ -255,7 +263,26 @@ async function finalCallLLM(inputPackMaintainer: any[], inputPackOptimizer: any[
 }
 
 async function main() {
+    // Parse arguments from CLI
+    const args = process.argv.slice(2);            // first two args are node(0) + review.ts(1)
+    const isGitMode = args.includes('--gitmode');
+    const isFileMode = args.includes('--file');
+    const isVerbose = args.includes('--verbose');
+
+    // Redirect stderr to debug.txt when verbose mode is enabled
+    let debugStream: fs.WriteStream | null = null;
+    if (isVerbose) {
+        const debugPath = path.resolve(process.cwd(), 'debug.txt');
+        debugStream = fs.createWriteStream(debugPath, { flags: 'a' });
+        const originalStderrWrite = process.stderr.write.bind(process.stderr);
+        process.stderr.write = (chunk: any, encoding?: any, callback?: any) => {
+            debugStream?.write(chunk, encoding);
+            return originalStderrWrite(chunk, encoding, callback);
+        };
+    }
+
     try {
+
         // Load system prompts 
         const instructPath1 = path.join(__dirname, 'system_prompts/INSTRUCTIONS1.md');
         const instructionsMaintainer = fs.readFileSync(instructPath1, 'utf-8');
@@ -265,12 +292,6 @@ async function main() {
 
         const instructPath3 = path.join(__dirname, 'system_prompts/INSTRUCTIONS3.md');
         const instructionsJudge = fs.readFileSync(instructPath3, 'utf-8');
-
-        // Parse arguments from CLI
-        const args = process.argv.slice(2);            // first two args are node(0) + review.ts(1)
-        const isGitMode = args.includes('--gitmode');
-        const isFileMode = args.includes('--file');
-        const isVerbose = args.includes('--verbose');
 
         if (isGitMode && isFileMode) {
             throw new Error("Please choose only one flag: --gitmode or --file <filename>")
@@ -429,7 +450,15 @@ async function main() {
     catch (error: any) {
 
         console.error(`⚠️  AN ERROR OCCURRED: ${error}`);
+        if (isVerbose && debugStream) {
+            debugStream.end();
+        }
         process.exit(1);
+    }
+    finally {
+        if (isVerbose && debugStream) {
+            debugStream.end();
+        }
     }
 }
 
