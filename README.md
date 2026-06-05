@@ -1,14 +1,18 @@
 # Code-Reviewer
 
 AI-powered code review tool using LLMs via OpenRouter. Reviews code in two modes:
-- **File mode**: `--file <filename>` - reviews a single file
-- **Git mode**: `--gitmode` - reviews staged changes (`git diff --staged`)
+- **File mode**: `--file <filename>` - reviews ANY code file from your device
+- **Git mode**: `--gitmode [repoPath]` - reviews staged changes in current or any local repo
 
-Three LLM agents: Maintainer (maintainability), Optimizer (performance), Judge (synthesis).
+This application writes a Markdown report to `./reports/` each time is run.
 
 ## LLMs used in this application:
-- **Model**: `google/gemini-2.5-pro` (via OpenRouter)
-- **Provider**: OpenRouter (`https://openrouter.ai/api/v1`)
+- [Google Gemini 2.5 Pro](https://openrouter.ai/google/gemini-2.5-pro)
+
+Three agents used:
+- Maintainer (maintainability) & Optimizer (performance) -> Parallel work 
+- Senior Developer Judge -> Synthesis/Aggregation (Writes report)
+
 
 ## ⚙️ Setup Instructions
 
@@ -49,7 +53,7 @@ Before running the application, follow these steps:
    - `./src/`: Main source code (review.ts, schemas.ts, tools.ts)
    - `./src/system_prompts/`: Agent instructions (INSTRUCTIONS1-3.md)
    - `./node_modules/`: Installed npm dependencies
-   - `./report/`: Generated review reports (created automatically)
+   - `./reports/`: Generated review reports (created automatically)
 
 ### 📄 Report Output
 - **File mode**: `report/report_[FILENAME].md`
@@ -62,22 +66,33 @@ Before running the application, follow these steps:
 - **Git not found**: Required for `--gitmode` and `get_file_history` tool. Install Git if missing.
 - **TypeScript errors**: Run `npx tsc --noEmit` to typecheck.
 
+---
+
 ## 🚀 Usage
+
+> [!IMPORTANT]
+> All paths used as parameters should be absolute paths and wrapped in quotes for safety.
 
 ### File Mode
 Review a single file:
 ```bash
-npx tsx src/review.ts --file path/to/your/file.ts [--verbose]
+npx tsx src/review.ts --file "path/to/your/file.ts" [--verbose]
 ```
 
-
 ### Git Mode
-Review staged changes:
+
+Review staged changes in a local cloned repo:
+```bash
+npx tsx src/review.ts --gitmode "/path/to/other/repo" [--verbose]
+```
+
+Review staged changes in current repo:
 ```bash
 npx tsx src/review.ts --gitmode [--verbose]
 ```
 
-### Typecheck Only
-```bash
-npx tsc --noEmit
-```
+> [!NOTE]
+> Verbose flag (`--verbose`) generates a `debug.txt` file with log traces (overridden per run), use it for engineering purposes only.
+
+
+
