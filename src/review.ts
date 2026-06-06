@@ -288,7 +288,7 @@ async function main() {
     // Redirect stderr to debug.txt when verbose mode is enabled (suppress terminal output)
     let debugStream: fs.WriteStream | null = null;
     if (isVerbose) {
-        const debugPath = path.resolve(process.cwd(), 'debug.txt');
+        const debugPath = path.resolve(process.cwd(), 'src/debug.txt');
         debugStream = fs.createWriteStream(debugPath, { flags: 'w' });
         process.stderr.write = (chunk: any, encoding?: any, callback?: any) => {
             debugStream?.write(chunk, encoding);

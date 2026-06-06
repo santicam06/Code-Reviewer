@@ -20,6 +20,9 @@ Before running the application, follow these steps:
 
 1. For this repository, create a **GitHub Codespace (Cloud)** OR clone it locally and open it with your preferred code editor (e.g. Visual Studio Code, ...).
 
+>[!IMPORTANT]
+From this point on, make sure that your present working directory on your terminal is the root directory of the application: `.\Code-Reviewer`.
+
 2. **Install Node.js** (If not already installed):
    - **Windows**: Download the latest installer from [nodejs.org](https://nodejs.org/) or use: `winget install OpenJS.NodeJS.LTS`
    - **macOS**: Use Homebrew: `brew install node`
@@ -80,7 +83,7 @@ npx tsx src/review.ts --file "path/to/your/file.ts" [--verbose]
 ```
 
 > [!NOTE]
-> Verbose flag (`--verbose`) generates a `debug.txt` file with log traces (overridden per run), use it for engineering purposes only.
+> Verbose flag (`--verbose`) generates a `src/debug.txt` file with log traces (overridden per run), use it for engineering purposes only.
 
 ### Git Mode
 
