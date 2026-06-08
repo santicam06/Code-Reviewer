@@ -487,7 +487,7 @@ async function main() {
     }
     catch (error: any) {
 
-        console.error(`⚠️  AN ERROR OCCURRED: ${error}`);
+        console.log(`⚠️  AN ERROR OCCURRED: ${error}`);
         if (isVerbose && debugStream) {
             debugStream.end();
         }
