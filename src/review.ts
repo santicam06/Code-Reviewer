@@ -308,6 +308,9 @@ async function main() {
             return true;
         };
     }
+    else {
+      process.stderr.write = () => true;
+    }
 
     try {
 
