@@ -92,10 +92,7 @@ Review staged changes in a local cloned repo:
 npx tsx src/review.ts --gitmode "/path/to/other/repo" [--verbose]
 ```
 
-Review staged changes in current repo:
-```bash
-npx tsx src/review.ts --gitmode [--verbose]
-```
+
 
 
 

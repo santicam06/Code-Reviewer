@@ -267,11 +267,23 @@ async function finalCallLLM(inputPackMaintainer: any[], inputPackOptimizer: any[
 async function main() {
     // Parse arguments from CLI
     const args = process.argv.slice(2);            // first two args are node(0) + review.ts(1)
+
+    if (args.includes('--gitmode') && args.includes('--file')) {
+      console.error(`\nPlease use only one mode (Gitmode or File mode). Refer to ./README.md file for correct use.`);
+      process.exit(1);
+    }
     const isGitMode = args.includes('--gitmode');
     const isFileMode = args.includes('--file');
     const isVerbose = args.includes('--verbose');
 
-    // Parse repo path (optional, only for git mode): --gitmode [repoPath] [--verbose]
+    const validFlags = ['--gitmode', '--file', '--verbose'];
+    const invalidFlags = args.filter(arg => arg.startsWith('--') && !validFlags.includes(arg));
+    if (invalidFlags.length > 0) {
+      console.error(`\nAn invalid flag was entered. Please refer to ./README.md file for correct use.`);
+      process.exit(1);
+    }
+
+    // Validate repo path (optional, only for git mode): --gitmode [repoPath] [--verbose]
     let repoPath: string | null = null;
     if (isGitMode) {
         const gitModeIdx = args.indexOf('--gitmode');
@@ -309,10 +321,6 @@ async function main() {
         const instructPath3 = path.join(__dirname, 'system_prompts/INSTRUCTIONS3.md');
         const instructionsJudge = fs.readFileSync(instructPath3, 'utf-8');
 
-        if (isGitMode && isFileMode) {
-            throw new Error("Please choose only one flag: --gitmode or --file <filename>")
-        }
-
         // REVIEWER 1: MAINTAINER MESSAGES PACK
         let inputPackMaintainer: any = [ { role: 'system', content: instructionsMaintainer }, ];
         
@@ -331,7 +339,7 @@ async function main() {
 
             if (!fileName || !fs.existsSync(fileName)) {
                 console.log('🔴 No file found to review in file mode. Check file name.');
-                process.exit(0);
+                process.exit(1);
             }
 
             // Proceed with file mode logic
@@ -463,14 +471,13 @@ async function main() {
             }
           }
           else {
-            console.error(`😕 NO VALID RESPONSE FROM THE LLM(s)`)
-            process.exit(1);
+            throw '😕 NO VALID RESPONSE FROM THE REVIEWER';
           }
         }
         // No flag was entered in CLI
         else {
-            console.log('⚠️  MAIN(): Please specify either --file <filename> or --gitmode.');
-            process.exit(0);
+            console.log('⚠️ Please specify either --file <filename> or --gitmode.');
+            process.exit(1);
         }
 
 
